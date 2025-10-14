@@ -274,14 +274,8 @@ const QRScanner = () => {
               <label className="block text-sm font-medium text-gray-700">姓名</label>
               <p className="text-lg font-semibold">{scannedUser.name}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">身分證字號</label>
-              <p className="text-lg font-semibold">{scannedUser.id}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">可用餘額</label>
-              <p className="text-lg font-semibold text-green-600">{scannedUser.balance} 點</p>
-            </div>
+           
+         
           </div>
 
           <div className="space-y-4">
