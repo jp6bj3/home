@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import NGOAdminDashboard from './pages/NGOAdmin/Dashboard';
 import StoreDashboard from './pages/Store/Dashboard';
 import AssociationDashboard from './pages/Association/Dashboard';
 import HomelessDashboard from './pages/Homeless/Dashboard';
+import QRScanResult from './pages/Scan/QRScanResult';
 import { USER_ROLES } from './constants/userRoles';
 
 function App() {
@@ -30,15 +32,37 @@ function App() {
       case USER_ROLES.HOMELESS:
         return <HomelessDashboard user={currentUser} onLogout={handleLogout} />;
       default:
-        return <Login onLogin={handleLogin} />;
+        return <Navigate to="/login" replace />;
     }
   };
 
-  if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
-  }
+  return (
+    <Router>
+      <Routes>
+        {/* 公開路由 - QR 掃描結果頁面 */}
+        <Route path="/scan/:qrCode" element={<QRScanResult />} />
 
-  return renderDashboard();
+        {/* 登入頁面 */}
+        <Route
+          path="/login"
+          element={
+            currentUser ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
+          }
+        />
+
+        {/* 需要登入的路由 */}
+        <Route
+          path="/"
+          element={
+            currentUser ? renderDashboard() : <Navigate to="/login" replace />
+          }
+        />
+
+        {/* 404 重定向 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

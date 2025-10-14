@@ -6,23 +6,18 @@ const QRCodeModal = ({ person, isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen && person && canvasRef.current) {
-      const qrData = JSON.stringify({
-        id: person.id,
-        name: person.name,
-        idNumber: person.idNumber,
-        qrCode: person.qrCode,
-        timestamp: Date.now()
-      });
+      // 生成掃描 URL
+      const scanUrl = `${window.location.origin}/scan/${person.qrCode}`;
 
       // 清空容器
       canvasRef.current.innerHTML = '';
-      
+
       // 創建 canvas 元素
       const canvas = document.createElement('canvas');
       canvasRef.current.appendChild(canvas);
 
-      // 生成 QR Code
-      QRCode.toCanvas(canvas, qrData, {
+      // 生成 QR Code，包含 URL 而非 JSON
+      QRCode.toCanvas(canvas, scanUrl, {
         width: 200,
         margin: 2,
         color: {

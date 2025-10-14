@@ -28,14 +28,10 @@ const HomelessDashboard = ({ user, onLogout }) => {
     const generateQRCode = async () => {
       try {
         setIsLoading(true);
-        const qrData = JSON.stringify({
-          id: homelessData.idNumber,
-          name: homelessData.name,
-          qrCode: homelessData.qrCode,
-          timestamp: Date.now()
-        });
+        // 生成掃描 URL
+        const scanUrl = `${window.location.origin}/scan/${homelessData.qrCode}`;
 
-        const dataURL = await QRCode.toDataURL(qrData, {
+        const dataURL = await QRCode.toDataURL(scanUrl, {
           width: 200,
           margin: 2,
           color: {
