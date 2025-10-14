@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../../components/Layout/MainLayout';
 import ProductForm from '../../components/Forms/ProductForm';
 
@@ -7,7 +7,7 @@ const StoreDashboard = ({ user, onLogout }) => {
 
   const tabs = [
     { id: 'products', name: '商品管理', icon: '🛍️' },
-    { id: 'scanner', name: '掃描扣點', icon: '📱' },
+    { id: 'scanner', name: '我的 QR Code', icon: '📱' },
     { id: 'reports', name: '收入報表', icon: '💰' }
   ];
 
@@ -221,109 +221,186 @@ const ProductManagement = () => {
 };
 
 const QRScanner = () => {
-  const [scannedUser, setScannedUser] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [customAmount, setCustomAmount] = useState('');
+  const [qrCodeDataURL, setQrCodeDataURL] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const mockUser = {
-    name: '張小明',
-    id: 'A123456789',
-    balance: 150
+  // 模擬店家資料
+  const storeData = {
+    id: 'STORE_001',
+    name: 'ABC餐廳',
+    qrCode: 'STORE_QR_001',
+    address: '台北市大安區和平東路123號',
+    phone: '02-2345-6789'
   };
 
-  const products = [
-    { id: 1, name: '午餐套餐', points: 80 },
-    { id: 2, name: '洗衣券', points: 50 },
-    { id: 3, name: '理髮服務', points: 100 }
-  ];
+  // 自動生成 QR Code
+  useEffect(() => {
+    const generateStoreQRCode = async () => {
+      try {
+        setIsLoading(true);
+        const QRCode = (await import('qrcode')).default;
+        const scanUrl = `${window.location.origin}/store-scan/${storeData.qrCode}`;
 
-  const handleScan = () => {
-    setScannedUser(mockUser);
+        const dataURL = await QRCode.toDataURL(scanUrl, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          },
+          errorCorrectionLevel: 'H'
+        });
+
+        setQrCodeDataURL(dataURL);
+      } catch (error) {
+        console.error('QR Code generation failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    generateStoreQRCode();
+  }, []);
+
+  const handleDownloadQR = () => {
+    const link = document.createElement('a');
+    link.download = `店家QRCode_${storeData.name}.png`;
+    link.href = qrCodeDataURL;
+    link.click();
   };
 
-  const handleTransaction = () => {
-    alert('交易完成！');
-    setScannedUser(null);
-    setSelectedProduct('');
-    setCustomAmount('');
+  const handlePrintQR = () => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>店家 QR Code - ${storeData.name}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              margin: 20px;
+            }
+            .qr-container {
+              border: 2px solid #000;
+              padding: 30px;
+              display: inline-block;
+              margin: 20px;
+            }
+            .info {
+              margin: 10px 0;
+              font-size: 16px;
+            }
+            h1 { font-size: 24px; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>街友捐款管理平台 - 店家 QR Code</h1>
+          <div class="qr-container">
+            <img src="${qrCodeDataURL}" alt="店家 QR Code" />
+            <div class="info"><strong>${storeData.name}</strong></div>
+            <div class="info">店家編號：${storeData.qrCode}</div>
+            <div class="info">${storeData.address}</div>
+            <div class="info">聯絡電話：${storeData.phone}</div>
+          </div>
+          <p style="font-size: 14px; color: #666; margin-top: 20px;">
+            請將此 QR Code 張貼於店內明顯處，<br/>
+            街友掃描後即可查看商品並進行點數消費
+          </p>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">掃描街友 QR Code</h3>
-        <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-12">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h4 className="text-lg font-medium text-blue-900 mb-2">📱 店家 QR Code 使用說明</h4>
+        <ul className="text-sm text-blue-800 space-y-1">
+          <li>• 這是您店家專屬的 QR Code</li>
+          <li>• 將 QR Code 列印並張貼在店內明顯處</li>
+          <li>• 街友掃描後可查看您提供的商品/服務並進行消費</li>
+          <li>• 系統會自動記錄所有交易</li>
+        </ul>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-6">您的店家 QR Code</h3>
+
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="text-center">
-            <div className="text-6xl mb-4">📱</div>
-            <p className="text-gray-600 mb-4">請掃描街友的 QR Code</p>
-            <button
-              onClick={handleScan}
-              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 text-lg"
-            >
-              模擬掃描
-            </button>
+            <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300 inline-block">
+              <img
+                src={qrCodeDataURL}
+                alt="店家 QR Code"
+                className="w-64 h-64"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="bg-green-50 p-4 rounded-lg mb-4">
+              <h4 className="font-semibold text-gray-900 mb-3">店家資訊</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">店名：</span>
+                  <span className="font-medium">{storeData.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">編號：</span>
+                  <span className="font-medium">{storeData.qrCode}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">地址：</span>
+                  <span className="font-medium text-right ml-2">{storeData.address}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">電話：</span>
+                  <span className="font-medium">{storeData.phone}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handlePrintQR}
+                className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                列印 QR Code
+              </button>
+              <button
+                onClick={handleDownloadQR}
+                className="w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                下載 QR Code
+              </button>
+            </div>
+
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                <strong>重要提醒：</strong><br/>
+                請將此 QR Code 列印並張貼在店內明顯位置，讓街友可以輕鬆掃描查看商品。
+              </p>
+            </div>
           </div>
         </div>
       </div>
-
-      {scannedUser && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h4 className="text-lg font-medium text-green-900 mb-4">掃描成功！</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">姓名</label>
-              <p className="text-lg font-semibold">{scannedUser.name}</p>
-            </div>
-           
-         
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">選擇商品</label>
-              <select
-                value={selectedProduct}
-                onChange={(e) => setSelectedProduct(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              >
-                <option value="">請選擇商品...</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} - {product.points} 點
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">或輸入自訂金額</label>
-              <input
-                type="number"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="輸入扣除點數"
-              />
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                onClick={handleTransaction}
-                className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700"
-                disabled={!selectedProduct && !customAmount}
-              >
-                確認扣點
-              </button>
-              <button
-                onClick={() => setScannedUser(null)}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-400"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
