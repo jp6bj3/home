@@ -33,18 +33,30 @@ const Login = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsLoading(true);
-    
-    // 模擬登入請求
-    setTimeout(() => {
+
+    try {
+      const result = await onLogin(formData);
+
+      if (!result.success) {
+        setErrors({
+          ...errors,
+          submit: result.message || '登入失敗，請檢查您的帳號密碼'
+        });
+      }
+    } catch (error) {
+      setErrors({
+        ...errors,
+        submit: '登入失敗，請稍後再試'
+      });
+    } finally {
       setIsLoading(false);
-      onLogin(formData);
-    }, 1000);
+    }
   };
 
   const handleChange = (e) => {
@@ -63,12 +75,25 @@ const Login = ({ onLogin }) => {
     }
   };
 
-  const quickLogin = (role, username = 'demo') => {
-    setFormData({
-      username,
-      password: 'demo123',
-      role
-    });
+  const quickLogin = (role) => {
+    // 根據角色設定對應的測試帳號和密碼
+    const credentials = {
+      [USER_ROLES.NGO_ADMIN]: { username: 'admin', password: 'admin123' },
+      [USER_ROLES.STORE]: { username: 'store1', password: 'store123' },
+      [USER_ROLES.HOMELESS]: { username: 'homeless1', password: 'homeless123' },
+      [USER_ROLES.NGO_PARTNER]: { username: 'ngo_partner', password: 'partner123' },
+      [USER_ROLES.ASSOCIATION_ADMIN]: { username: 'association', password: 'assoc123' },
+      [USER_ROLES.ASSOCIATION_PARTNER]: { username: 'association', password: 'assoc123' }
+    };
+
+    const cred = credentials[role];
+    if (cred) {
+      setFormData({
+        username: cred.username,
+        password: cred.password,
+        role
+      });
+    }
   };
 
   return (
@@ -159,6 +184,12 @@ const Login = ({ onLogin }) => {
             </div>
           </div>
 
+          {errors.submit && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-600 text-center">{errors.submit}</p>
+            </div>
+          )}
+
           <div>
             <button
               type="submit"
@@ -206,7 +237,7 @@ const Login = ({ onLogin }) => {
               協會管理員
             </button>
             <button
-              onClick={() => quickLogin(USER_ROLES.HOMELESS, '張小明')}
+              onClick={() => quickLogin(USER_ROLES.HOMELESS)}
               className="col-span-2 px-3 py-2 text-xs bg-orange-100 text-orange-800 rounded-md hover:bg-orange-200 transition-colors"
             >
               無家者 (街友)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import NGOAdminDashboard from './pages/NGOAdmin/Dashboard';
@@ -8,17 +8,31 @@ import HomelessDashboard from './pages/Homeless/Dashboard';
 import QRScanResult from './pages/Scan/QRScanResult';
 import StoreScanResult from './pages/Scan/StoreScanResult';
 import { USER_ROLES } from './constants/userRoles';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser, loading, login, logout } = useAuth();
 
-  const handleLogin = (userData) => {
-    setCurrentUser(userData);
+  const handleLogin = async (userData) => {
+    const result = await login(userData.username, userData.password, userData.role);
+    return result;
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await logout();
   };
+
+  // 載入中顯示
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderDashboard = () => {
     switch (currentUser?.role) {
