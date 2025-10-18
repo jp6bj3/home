@@ -6,15 +6,23 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     // 取得街友資訊（公開）
     try {
+      console.log('=== Homeless API Debug ===');
+      console.log('Received qrCode:', qrCode);
+      console.log('HomelessModel type:', typeof HomelessModel);
+      console.log('HomelessModel.findByQrCode type:', typeof HomelessModel.findByQrCode);
+
       const homeless = HomelessModel.findByQrCode(qrCode);
+      console.log('Found homeless:', homeless);
 
       if (!homeless) {
+        console.log('Homeless not found for qrCode:', qrCode);
         return res.status(404).json({
           success: false,
           message: '找不到該街友資訊'
         });
       }
 
+      console.log('Returning homeless data successfully');
       res.json({
         success: true,
         data: homeless
