@@ -1,0 +1,35 @@
+import { StoreModel } from '../../lib/models/users.js';
+
+export default async function handler(req, res) {
+  const { qrCode } = req.query;
+
+  if (req.method === 'GET') {
+    // 取得店家資訊（公開）
+    try {
+      const store = StoreModel.findByQrCode(qrCode);
+
+      if (!store) {
+        return res.status(404).json({
+          success: false,
+          message: '找不到該店家資訊'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: store
+      });
+    } catch (error) {
+      console.error('Get store error:', error);
+      res.status(500).json({
+        success: false,
+        message: '伺服器錯誤'
+      });
+    }
+  } else {
+    res.status(405).json({
+      success: false,
+      message: 'Method not allowed'
+    });
+  }
+}
