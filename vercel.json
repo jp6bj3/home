@@ -8,11 +8,5 @@
       "memory": 1024,
       "maxDuration": 10
     }
-  },
-  "env": {
-    "JWT_SECRET": "@jwt-secret",
-    "JWT_REFRESH_SECRET": "@jwt-refresh-secret",
-    "JWT_ACCESS_EXPIRY": "15m",
-    "JWT_REFRESH_EXPIRY": "7d"
   }
 }
